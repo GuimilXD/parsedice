@@ -21,16 +21,22 @@ void check_error(const char *original_string, ParseDiceExpression e) {
 
 void print_item(ParserItem i) {
     switch (i.type) {
-        case ParserIntType:
-            printf("%d", i.integer);
+        case ParserConstNumType:
+            printf("%f", i.number);
             break;
         case ParserDiceType:
             printf("%dd%d", i.dice.amount, i.dice.faces);
             break;
         case ParserBinaryOperationType:
-            printf("op: %d", i.operation);
+            putchar(parsedice_operation_to_char(i.operation));
             break;
-        default:
+        case ParserOpenParenthesisType:
+            printf("(");
+            break;
+        case ParserCloseParenthesisType:
+            printf(")");
+            break;
+        case ParserErrorType:
             printf("ERROR");
             break;
     }
@@ -42,6 +48,10 @@ void print_expression(ParseDiceExpression e) {
         printf(" ");
     }
     printf("\n");
+}
+
+bool compare_string_slice(StringSlice s, const char* cstr) {
+    return strncmp(s.start, cstr, s.len) == 0;
 }
 
 void test_simple_dice(void) {
@@ -59,6 +69,24 @@ void test_simple_dice(void) {
   assert(item.dice.faces == 4);
 
   parsedice_expression_free(&e);
+}
+
+void test_dice_error_cases(void) {
+    // Expect integer after d
+    {
+        const char *input_str = "1d-";
+
+        ParseDiceExpression e = parsedice_parse_string(input_str);
+
+        assert(e.length == 1);
+
+        ParserItem item = e.items[0];
+        assert(item.type == ParserErrorType);
+        assert(item.error.type == ParserErrorExpectedInt);
+        assert(compare_string_slice(item.error.stopped_at, "-"));
+
+        parsedice_expression_free(&e);
+    }
 }
 
 void test_ignore_spaces(void) {
@@ -116,48 +144,84 @@ void test_expression(void) {
   assert(e.items == NULL);
 }
 
-void test_simple_const_int(void) {
-  const char *input_str = "   32 +50 -120 ";
+void test_simple_const_num(void) {
+  const char *input_str = "   32.3 +50 -120 ";
 
   ParseDiceExpression e = parsedice_parse_string(input_str);
 
   check_error(input_str, e);
 
   assert(e.length == 3);
-  assert(e.items[0].integer == 32);
-  assert(e.items[1].integer == 50);
-  assert(e.items[2].integer == -120);
+  assert(e.items[0].number == 32.3f);
+  assert(e.items[1].number == 50);
+  assert(e.items[2].number == -120);
 
   parsedice_expression_free(&e);
 }
 
 void test_complex_parsing(void) {
-  const char *input_str = "2d4+ -2";
+  const char *input_str = "2d4 + -2 * 3";
 
   ParseDiceExpression e = parsedice_parse_string(input_str);
 
   check_error(input_str, e);
 
-  assert(e.length == 3);
+  assert(e.length == 5);
 
   assert(e.items[0].type == ParserDiceType);
   assert(e.items[1].type == ParserBinaryOperationType);
-  assert(e.items[2].type == ParserIntType);
+  assert(e.items[2].type == ParserConstNumType);
+  assert(e.items[3].type == ParserBinaryOperationType);
+  assert(e.items[4].type == ParserConstNumType);
 
   assert(e.items[0].dice.amount == 2);
   assert(e.items[0].dice.faces == 4);
 
   assert(e.items[1].operation == BinaryOperationAdd);
 
-  assert(e.items[2].integer == -2);
+  assert(e.items[2].number == -2);
+
+  assert(e.items[3].operation == BinaryOperationMul);
+
+  assert(e.items[4].number == 3);
+
+  parsedice_expression_free(&e);
+}
+
+void test_parethesis_parsing(void){
+  const char *input_str = "(1d4 + 2) * 2";
+
+  ParseDiceExpression e = parsedice_parse_string(input_str);
+
+  check_error(input_str, e);
+
+  assert(e.length == 7);
+
+  assert(e.items[0].type == ParserOpenParenthesisType);
+  assert(e.items[1].type == ParserDiceType);
+  assert(e.items[2].type == ParserBinaryOperationType);
+  assert(e.items[3].type == ParserConstNumType);
+  assert(e.items[4].type == ParserCloseParenthesisType);
+  assert(e.items[5].type == ParserBinaryOperationType);
+  assert(e.items[6].type == ParserConstNumType);
 
   parsedice_expression_free(&e);
 }
 
 int main(void) {
   test_simple_dice();
+  test_dice_error_cases();
   test_ignore_spaces();
   test_expression();
-  test_simple_const_int();
+  test_simple_const_num();
   test_complex_parsing();
+  test_parethesis_parsing();
+
+  const char *input_str = "(1d4 + 2) * 2";
+
+  ParseDiceExpression e = parsedice_parse_string(input_str);
+
+  check_error(input_str, e);
+
+  parsedice_expression_free(&e);
 }
