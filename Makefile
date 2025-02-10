@@ -20,7 +20,7 @@ all: $(EXES) run-tests
 # Compile each test file to an executable
 $(BUILD_DIR)/%: $(TEST_DIR)/%.c
 	@mkdir -p $(BUILD_DIR)
-	$(CC) $(INCLUDES) -o $@ $<
+	$(CC) $(INCLUDES) -Wextra -Wall -o $@ $<
 
 # Run each executable in the build directory
 run-tests: $(EXES)
