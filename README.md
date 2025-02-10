@@ -29,30 +29,27 @@ To use it in your project, **define `PARSEDICE_IMPLEMENTATION` in exactly one `.
 
 ```c
 #include <stdio.h>
+#define PARSEDICE_IMPLEMENTATION
 #include "parsedice.h"
 
 int main(void) {
-    const char *input_str = "3d6 + 1d4 * 2";
+  const char *input_str = "3d6 + 1";
 
-    ParseDiceExpression e = parsedice_parse_string(input_str);
-    parsedice_expression_print_errors(input_str, e);
+  ParseDiceExpression e = parsedice_parse_string(input_str);
+  // Print errors if any
+  parsedice_expression_print_errors(input_str, e);
 
-    // Convert to postfix notation
-    ParseDiceExpression postfix = parsedice_expression_to_postfix(e);
-    parsedice_expression_print_errors(input_str, postfix);
+  // Evaluate expression
+  ParserItem result = parsedice_expression_evaluate(e);
 
-    // Evaluate expression
-    ParserItem result = parsedice_expression_evaluate_postfix(postfix);
+  printf("Result: ");
+  parsedice_parser_item_print(result);
+  printf("\n");
 
-    printf("Result: ");
-    parsedice_parser_item_print(result);
-    printf("\n");
+  // Cleanup
+  parsedice_expression_destroy(&e);
 
-    // Cleanup
-    parsedice_expression_destroy(&e);
-    parsedice_expression_destroy(&postfix);
-
-    return 0;
+  return 0;
 }
 ```
 

@@ -87,6 +87,7 @@ ParseDiceExpression parsedice_expression_create(void);
 void parsedice_expression_destroy(ParseDiceExpression *e);
 void parsedice_expression_append(ParseDiceExpression *e, ParserItem i);
 bool parsedice_expression_is_balanced(ParseDiceExpression ex);
+ParserItem parsedice_expression_evaluate(ParseDiceExpression e);
 ParseDiceExpression parsedice_expression_to_postfix(ParseDiceExpression e);
 ParserItem parsedice_expression_evaluate_postfix(ParseDiceExpression e);
 void parsedice_expression_print_errors(const char *original_string,
@@ -94,6 +95,7 @@ void parsedice_expression_print_errors(const char *original_string,
 void parsedice_expression_print(ParseDiceExpression e);
 
 #ifdef PARSEDICE_IMPLEMENTATION
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -562,6 +564,17 @@ static ParserItem handle_operation(ParseDiceExpression e, size_t idx, ParserItem
   return (ParserItem){.type = ParserConstNumType,
                       .number = op_handlers[op](left.number, right.number)};
 }
+
+ParserItem parsedice_expression_evaluate(ParseDiceExpression e) {
+    ParseDiceExpression postfix = parsedice_expression_to_postfix(e);
+
+    ParserItem result = parsedice_expression_evaluate_postfix(postfix);
+
+    parsedice_expression_destroy(&postfix);
+
+    return result;
+}
+
 
 ParserItem parsedice_expression_evaluate_postfix(ParseDiceExpression e) {
   ParserItemStack *s = parser_item_stack_create();
