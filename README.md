@@ -4,12 +4,12 @@
 
 ## Features 🚀
 
-✅ **Single-header, STB-style** (just include `parsedice.h`)
-✅ **Parse standard dice notation** (e.g., `3d6`, `1d20 + 5`, `(2d4 + 3) * 2`)
-✅ **Supports math operations** (`+`, `-`, `*`, `/`)
-✅ **Evaluates expressions correctly**
-✅ **Error handling for invalid expressions**
-✅ **Minimal dependencies, easy to integrate**
+- ✅ **Single-header, STB-style** (just include `parsedice.h`)
+- ✅ **Parse standard dice notation** (e.g., `3d6`, `1d20 + 5`, `(2d4 + 3) * 2`)
+- ✅ **Supports math operations** (`+`, `-`, `*`, `/`)
+- ✅ **Evaluates expressions correctly**
+- ✅ **Error handling for invalid expressions**
+- ✅ **Minimal dependencies, easy to integrate**
 
 ---
 
